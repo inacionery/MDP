@@ -1,57 +1,60 @@
-public class MDP {
-	private static int _columns = 4;
-	private static int _rows = 3;
+import java.util.Arrays;
 
-	private static int _maxInteractions = 1000;
+public class MDP {
+	private static int _maxInteractions = 100000;
 
 	private static double _discountValue = 1;
 	private static double _probabilityBad = 0.1;
 	private static double _probabilityGood = 0.8;
 	private static double _reward = -0.4;
 
+	private static int _columns = 4;
+	private static int _rows = 3;
+
 	private static double _matrix[][] = new double[_rows][_columns];
 	private static String _policyMatrix[][] = new String[_rows][_columns];
 	private static double _rewardMatrix[][] = new double[_rows][_columns];
 
 	public static void main(String[] args) {
-		initMatrix();
 		initRewardMatrix();
 
-		int n = 0;
-		printMatrix(n);
-		while (n < _maxInteractions) {
-			updateMatrix();
+		for (int i = 1; i <= _maxInteractions; i++) {
+			double[][] updateMatrix = updateMatrix();
 
-			n++;
+			if (Arrays.deepEquals(_matrix, updateMatrix)) {
+				break;
+			}
 
-			printMatrix(n);
+			_matrix = updateMatrix;
+
+			printMatrix(i);
 		}
 
 		printPolicy();
 	}
 
-	private static double aDown(int row, int column) {
+	private static double actionDown(int row, int column) {
 		if (row == (_rows - 1)) {
 			return _matrix[row][column];
 		}
 		return _matrix[row + 1][column];
 	}
 
-	private static double aLeft(int row, int column) {
+	private static double actionLeft(int row, int column) {
 		if (column == 0) {
 			return _matrix[row][column];
 		}
 		return _matrix[row][column - 1];
 	}
 
-	private static double aRight(int row, int column) {
+	private static double actionRight(int row, int column) {
 		if (column == (_columns - 1)) {
 			return _matrix[row][column];
 		}
 		return _matrix[row][column + 1];
 	}
 
-	private static double aUp(int row, int column) {
+	private static double actionUp(int row, int column) {
 		if (row == 0) {
 			return _matrix[row][column];
 		}
@@ -69,14 +72,6 @@ public class MDP {
 		return best;
 	}
 
-	private static void initMatrix() {
-		for (int r = 0; r < _rows; r++) {
-			for (int c = 0; c < _columns; c++) {
-				_matrix[r][c] = 0;
-			}
-		}
-	}
-
 	private static void initRewardMatrix() {
 		for (int r = 0; r < _rows; r++) {
 			for (int c = 0; c < _columns; c++) {
@@ -87,7 +82,6 @@ public class MDP {
 		_rewardMatrix[0][3] = 1;
 		_rewardMatrix[1][1] = -0.5;
 		_rewardMatrix[1][3] = -1;
-		_rewardMatrix[2][3] = 0.2;
 	}
 
 	private static void printMatrix(int n) {
@@ -117,7 +111,7 @@ public class MDP {
 		System.out.println();
 	}
 
-	private static void updateMatrix() {
+	private static double[][] updateMatrix() {
 		double auxMatrix[][] = new double[_rows][_columns];
 
 		for (int row = 0; row < _rows; row++) {
@@ -128,20 +122,22 @@ public class MDP {
 				if (((row == 0) && (column == 3))
 						|| ((row == 1) && (column == 3))) {
 					auxMatrix[row][column] = _rewardMatrix[row][column];
-				}
-				else {
-					actionMatrix[0] = (aUp(row, column) * _probabilityGood)
-							+ (aLeft(row, column) * _probabilityBad)
-							+ (aRight(row, column) * _probabilityBad);
-					actionMatrix[1] = (aDown(row, column) * _probabilityGood)
-							+ (aLeft(row, column) * _probabilityBad)
-							+ (aRight(row, column) * _probabilityBad);
-					actionMatrix[2] = (aRight(row, column) * _probabilityGood)
-							+ (aDown(row, column) * _probabilityBad)
-							+ (aUp(row, column) * _probabilityBad);
-					actionMatrix[3] = (aLeft(row, column) * _probabilityGood)
-							+ (aDown(row, column) * _probabilityBad)
-							+ (aUp(row, column) * _probabilityBad);
+				} else {
+					actionMatrix[0] = (actionUp(row, column) * _probabilityGood)
+							+ (actionLeft(row, column) * _probabilityBad)
+							+ (actionRight(row, column) * _probabilityBad);
+					actionMatrix[1] = (actionDown(row, column)
+							* _probabilityGood)
+							+ (actionLeft(row, column) * _probabilityBad)
+							+ (actionRight(row, column) * _probabilityBad);
+					actionMatrix[2] = (actionRight(row, column)
+							* _probabilityGood)
+							+ (actionDown(row, column) * _probabilityBad)
+							+ (actionUp(row, column) * _probabilityBad);
+					actionMatrix[3] = (actionLeft(row, column)
+							* _probabilityGood)
+							+ (actionDown(row, column) * _probabilityBad)
+							+ (actionUp(row, column) * _probabilityBad);
 
 					int best = bestAction(actionMatrix);
 
@@ -154,10 +150,6 @@ public class MDP {
 			}
 		}
 
-		for (int r = 0; r < _rows; r++) {
-			for (int c = 0; c < _columns; c++) {
-				_matrix[r][c] = auxMatrix[r][c];
-			}
-		}
+		return auxMatrix;
 	}
 }
