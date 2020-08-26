@@ -1,7 +1,10 @@
 import java.util.Arrays;
+import java.util.List;
 
 public class MDP {
-	private static int _maxInteractions = 100000;
+	private static int _maxInteractions = 10000000;
+	private static List<Integer> checkPoints = Arrays.asList(1, 10, 100, 1000,
+			10000, 100000, 1000000);
 
 	private static double _discountValue = 1;
 	private static double _probabilityBad = 0.1;
@@ -18,19 +21,22 @@ public class MDP {
 	public static void main(String[] args) {
 		initRewardMatrix();
 
-		for (int i = 1; i <= _maxInteractions; i++) {
+		for (int i = 1; i <= (_maxInteractions + 1); i++) {
 			double[][] updateMatrix = updateMatrix();
 
-			if (Arrays.deepEquals(_matrix, updateMatrix)) {
+			if (Arrays.deepEquals(_matrix, updateMatrix)
+					|| (i > _maxInteractions)) {
+				printMatrix(i - 1);
+
 				break;
 			}
 
 			_matrix = updateMatrix;
 
-			printMatrix(i);
+			if (checkPoints.contains(i)) {
+				printMatrix(i);
+			}
 		}
-
-		printPolicy();
 	}
 
 	private static double actionDown(int row, int column) {
@@ -82,29 +88,30 @@ public class MDP {
 		_rewardMatrix[0][3] = 1;
 		_rewardMatrix[1][1] = -0.5;
 		_rewardMatrix[1][3] = -1;
+		_rewardMatrix[2][3] = 0.2;
 	}
 
 	private static void printMatrix(int n) {
-		System.out.println("After " + n + " iterations:");
-		System.out.println();
-		for (int r = 0; r < _rows; r++) {
-			for (int c = 0; c < _columns; c++) {
-				System.out.printf("% 6.4f\t", _matrix[r][c]);
-			}
-			System.out.println();
+		String value = "After " + n + " iterations:";
+		System.out.print(value);
+		for (int i = 0; i < (51 - value.length()); i++) {
+			System.out.print(" ");
 		}
+		System.out.println("|   Best policy:");
 		System.out.println();
-	}
-
-	private static void printPolicy() {
 		_policyMatrix[0][3] = "+";
 		_policyMatrix[1][3] = "-";
-
-		System.out.println("Best policy:");
-		System.out.println();
 		for (int r = 0; r < _rows; r++) {
 			for (int c = 0; c < _columns; c++) {
-				System.out.print(_policyMatrix[r][c] + "\t");
+				value = String.format("%6.4f", _matrix[r][c]);
+				for (int i = 0; i < (12 - value.length()); i++) {
+					System.out.print(" ");
+				}
+				System.out.print(value);
+			}
+			System.out.print("   |   ");
+			for (int c = 0; c < _columns; c++) {
+				System.out.print(_policyMatrix[r][c] + "  ");
 			}
 			System.out.println();
 		}
